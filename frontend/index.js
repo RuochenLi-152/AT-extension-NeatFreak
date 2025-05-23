@@ -3,13 +3,13 @@ import {
     useBase,
     useRecords,
     TablePickerSynced,
-    FieldPicker,
+    Select,
     Button,
     Box,
     Text,
     useGlobalConfig,
     Loader,
-    useWatchable
+    useWatchable,
 } from '@airtable/blocks/ui';
 import React, { useState, useEffect } from 'react';
 
@@ -24,17 +24,17 @@ function NeatFreakApp() {
 
     const table = base.getTableByIdIfExists(tableId);
 
-    // Ensure updates to table fields are reactive
     useWatchable(table, ['fields']);
 
     const records = useRecords(table);
 
-    // Set initial field from global config
     useEffect(() => {
         if (table && fieldId) {
             const field = table.getFieldByIdIfExists(fieldId);
             if (field?.type === 'multipleSelects') {
                 setSelectedField(field);
+            } else {
+                setSelectedField(null);
             }
         }
     }, [table, fieldId]);
@@ -63,7 +63,7 @@ function NeatFreakApp() {
 
             alert("You're all set, enjoy the sorted, clean look!");
         } catch (error) {
-            console.error("Error during import:", error);
+            console.error("Error during sort:", error);
             alert("An error occurred. Check the console for details.");
         } finally {
             setIsLoading(false);
@@ -76,7 +76,7 @@ function NeatFreakApp() {
         setSelectedField(null);
     };
 
-    const multipleSelectFields = table?.fields.filter(f => f.type === 'multipleSelects');
+    const multipleSelectFields = table?.fields.filter(f => f.type === 'multipleSelects') ?? [];
 
     return (
         <Box padding={3}>
@@ -96,14 +96,19 @@ function NeatFreakApp() {
             {table && (
                 <>
                     <Text marginTop={3}>Select a multiple-select field:</Text>
-                    <FieldPicker
-                        table={table}
-                        field={selectedField}
-                        allowedFieldIds={multipleSelectFields.map(f => f.id)}
-                        onChange={(newField) => {
+                    <Select
+                        options={multipleSelectFields.map(f => ({
+                            value: f.id,
+                            label: f.name,
+                        }))}
+                        value={selectedField?.id ?? ''}
+                        onChange={(newId) => {
+                            const newField = table.getFieldByIdIfExists(newId);
                             setSelectedField(newField);
-                            globalConfig.setAsync('selectedFieldId', newField?.id ?? null);
+                            globalConfig.setAsync('selectedFieldId', newId);
                         }}
+                        placeholder="Select a field"
+                        disabled={multipleSelectFields.length === 0}
                     />
                 </>
             )}
@@ -114,7 +119,7 @@ function NeatFreakApp() {
                         Sort
                     </Button>
                 )}
-                <Button icon="x" variant="danger" onClick={resetSelections}>
+                <Button marginLeft={2} icon="x" variant="danger" onClick={resetSelections}>
                     Reset
                 </Button>
             </Box>
