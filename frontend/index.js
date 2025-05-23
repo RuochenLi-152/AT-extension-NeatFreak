@@ -7,47 +7,59 @@ import {
     Button,
     Box,
     Text,
-    useGlobalConfig
+    useGlobalConfig,
+    Loader,
 } from '@airtable/blocks/ui';
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 
 function NeatFreakApp() {
     const base = useBase();
     const globalConfig = useGlobalConfig();
+    const [isLoading, setIsLoading] = useState(false);
+
     const tableId = globalConfig.get('selectedTableId');
     const fieldId = globalConfig.get('selectedFieldId');
 
     const table = base.getTableByIdIfExists(tableId);
     const field = table?.getFieldByIdIfExists(fieldId);
-
     const records = useRecords(table);
 
     const isValid = table && field && field.type === 'multipleSelects';
 
     const sortOptions = async () => {
-        if (!isValid) return;
+        setIsLoading(true);
 
-        const optionsOrder = field.options.choices.map(choice => choice.name);
-
-        for (let record of records) {
-            const current = record.getCellValue(field);
-            if (Array.isArray(current)) {
-                const sorted = [...current].sort((a, b) =>
-                    optionsOrder.indexOf(a.name) - optionsOrder.indexOf(b.name)
-                );
-                await table.updateRecordAsync(record.id, {
-                    [field.id]: sorted
-                });
+        try {
+            if (!isValid) return;
+            const optionsOrder = field.options.choices.map(choice => choice.name);
+    
+            for (let record of records) {
+                const current = record.getCellValue(field);
+                if (Array.isArray(current)) {
+                    const sorted = [...current].sort((a, b) =>
+                        optionsOrder.indexOf(a.name) - optionsOrder.indexOf(b.name)
+                    );
+                    await table.updateRecordAsync(record.id, {
+                        [field.id]: sorted
+                    });
+                }
             }
+            alert('All tidy!');
+        } catch (error) {
+            console.error("Error during import:", error);
+            alert("An error occurred. Check the console for details.");
         }
+    };
 
-        alert('🎉 Done tidying up!');
+    const resetSelections = async () => {
+        await globalConfig.setAsync('selectedTableId', null);
+        await globalConfig.setAsync('selectedFieldId', null);
     };
 
     return (
         <Box padding={3}>
-            <Text fontSize={4} marginBottom={2}>
-                🧼 Welcome to NeatFreak!
+            <Text fontWeight= {'bold'} fontSize={4} marginBottom={2}>
+                NeatFreak - Help neat freaks to make their fields look nice!
             </Text>
 
             <Text>Select a table:</Text>
@@ -64,16 +76,16 @@ function NeatFreakApp() {
                 </>
             )}
 
-            {isValid && (
-                <Button
-                    marginTop={4}
-                    onClick={sortOptions}
-                    icon="sort"
-                    variant="primary"
-                >
-                    Sort Selected Options
+            <Box marginTop={4} display="flex" gap="10px">
+                {isValid && (
+                    <Button icon="sort" variant="primary" onClick={sortOptions}>
+                        Sort Selected Options
+                    </Button>
+                )}
+                <Button icon="x" variant="danger" onClick={resetSelections}>
+                    Reset
                 </Button>
-            )}
+            </Box>
         </Box>
     );
 }
