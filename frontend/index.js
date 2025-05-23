@@ -20,8 +20,6 @@ function NeatFreakApp() {
     const [selectedField, setSelectedField] = useState(null);
 
     const tableId = globalConfig.get('selectedTableId');
-    const fieldId = globalConfig.get('selectedFieldId');
-
     const table = base.getTableByIdIfExists(tableId);
 
     useWatchable(table, ['fields']);
@@ -80,9 +78,22 @@ function NeatFreakApp() {
 
     return (
         <Box padding={3}>
-            <Text fontWeight={'bold'} fontSize={4} marginBottom={3}>
-                NeatFreak – Help neat freaks make their fields look nice!
-            </Text>
+            <Box
+                marginBottom={3}
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                borderBottom="thick"
+                paddingBottom={2}
+            >
+                <Text fontSize={5} fontWeight="bold" marginBottom={2}>
+                    NeatFreak
+                </Text>
+                <Text fontSize={2} textAlign="center" textColor="light">
+                    Tidy up your multi-select fields with just one click
+                </Text>
+            </Box>
+
 
             {isLoading && (
                 <Box marginTop={3} marginBottom={3} display="flex" justifyContent="center">
@@ -107,11 +118,11 @@ function NeatFreakApp() {
                         setSelectedField(newField);
                         globalConfig.setAsync('selectedFieldId', newId);
                     }}
-                    placeholder="Select a field"
+                    placeholder="Choose your mess to clean up"
                     disabled={multipleSelectFields.length === 0}
                 />
             </>
-        )}
+            )}
 
             <Box marginTop={4} display="flex" gap="10px">
                 {isValid && (
