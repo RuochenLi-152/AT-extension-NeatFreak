@@ -48,6 +48,8 @@ function NeatFreakApp() {
         } catch (error) {
             console.error("Error during import:", error);
             alert("An error occurred. Check the console for details.");
+        } finally {
+            setIsLoading(false)
         }
     };
 
@@ -58,9 +60,14 @@ function NeatFreakApp() {
 
     return (
         <Box padding={3}>
-            <Text fontWeight= {'bold'} fontSize={4} marginBottom={2}>
+            <Text fontWeight= {'bold'} fontSize={4} marginBottom={3}>
                 NeatFreak - Help neat freaks to make their fields look nice!
             </Text>
+            {isLoading && (
+                <Box marginTop={3} marginBottom={3} display="flex" justifyContent="center">
+                    <Loader scale={0.5} />
+                </Box>
+            )}
 
             <Text>Select a table:</Text>
             <TablePickerSynced globalConfigKey="selectedTableId" />
@@ -79,10 +86,10 @@ function NeatFreakApp() {
             <Box marginTop={4} display="flex" gap="10px">
                 {isValid && (
                     <Button icon="sort" variant="primary" onClick={sortOptions}>
-                        Sort Selected Options
+                        Sort
                     </Button>
                 )}
-                <Button icon="x" variant="danger" onClick={resetSelections}>
+                <Button marginLeft={2} icon="x" variant="danger" onClick={resetSelections}>
                     Reset
                 </Button>
             </Box>
