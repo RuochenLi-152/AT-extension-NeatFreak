@@ -29,15 +29,15 @@ function NeatFreakApp() {
     const records = useRecords(table);
 
     useEffect(() => {
-        if (table && fieldId) {
-            const field = table.getFieldByIdIfExists(fieldId);
-            if (field?.type === 'multipleSelects') {
-                setSelectedField(field);
-            } else {
-                setSelectedField(null);
+        if (table) {
+            const availableFields = table.fields.filter(f => f.type === 'multipleSelects');
+            if (availableFields.length === 1) {
+                const autoField = availableFields[0];
+                setSelectedField(autoField);
+                globalConfig.setAsync('selectedFieldId', autoField.id);
             }
         }
-    }, [table, fieldId]);
+    }, [table]);
 
     const isValid = table && selectedField && selectedField.type === 'multipleSelects';
 
@@ -95,23 +95,23 @@ function NeatFreakApp() {
 
             {table && (
                 <>
-                    <Text marginTop={3}>Select a multiple-select field:</Text>
-                    <Select
-                        options={multipleSelectFields.map(f => ({
-                            value: f.id,
-                            label: f.name,
-                        }))}
-                        value={selectedField?.id ?? ''}
-                        onChange={(newId) => {
-                            const newField = table.getFieldByIdIfExists(newId);
-                            setSelectedField(newField);
-                            globalConfig.setAsync('selectedFieldId', newId);
-                        }}
-                        placeholder="Select a field"
-                        disabled={multipleSelectFields.length === 0}
-                    />
-                </>
-            )}
+                <Text marginTop={3}>Select a multiple-select field:</Text>
+                <Select
+                    options={multipleSelectFields.map(f => ({
+                        value: f.id,
+                        label: f.name,
+                    }))}
+                    value={selectedField?.id ?? null}
+                    onChange={(newId) => {
+                        const newField = table.getFieldByIdIfExists(newId);
+                        setSelectedField(newField);
+                        globalConfig.setAsync('selectedFieldId', newId);
+                    }}
+                    placeholder="Select a field"
+                    disabled={multipleSelectFields.length === 0}
+                />
+            </>
+        )}
 
             <Box marginTop={4} display="flex" gap="10px">
                 {isValid && (
